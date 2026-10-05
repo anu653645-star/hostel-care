@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sign in · HostelCare</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="auth-page">
+<main class="auth-card">
+    <a class="brand" href="/"><span class="brand-mark">H</span> HostelCare</a>
+    <p class="eyebrow">A better way to get things fixed</p>
+    <h1>Welcome back</h1>
+    <p class="muted">Sign in with your college email address.</p>
+    <div class="notice success" th:if="${param.registered}">Your account is ready. Sign in to continue.</div>
+    <div class="notice" th:if="${param.logout}">You have been signed out.</div>
+    <div class="notice error" th:if="${param.error}">Email or password is incorrect.</div>
+    <form th:action="@{/login}" method="post" class="stack-form">
+        <label for="username">College email</label>
+        <input id="username" name="username" type="email" autocomplete="username" placeholder="you@citchennai.net" required>
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+        <button class="button primary full-width" type="submit">Sign in <span aria-hidden="true">→</span></button>
+    </form>
+    <p class="auth-footer">New to HostelCare? <a th:href="@{/register}">Create an account</a></p>
+</main>
+</body>
+</html>

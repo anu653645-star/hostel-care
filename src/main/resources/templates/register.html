@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Create account · HostelCare</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="auth-page">
+<main class="auth-card">
+    <a class="brand" th:href="@{/}"><span class="brand-mark">H</span> HostelCare</a>
+    <p class="eyebrow">YOUR HOSTEL, WELL LOOKED AFTER</p>
+    <h1>Create your account</h1>
+    <p class="muted">Register with your <span th:text="'@' + ${collegeEmailDomain}">college email</span>.</p>
+    <div class="notice error" th:if="${registrationError}" th:text="${registrationError}"></div>
+    <div class="notice error" th:if="${hasValidationErrors}">Please check the form fields and try again.</div>
+    <form th:action="@{/register}" th:object="${form}" method="post" class="stack-form">
+        <label for="fullName">Full name</label>
+        <input id="fullName" th:field="*{fullName}" autocomplete="name" required>
+        <label for="email">College email</label>
+        <input id="email" th:field="*{email}" type="email" placeholder="you@citchennai.net" autocomplete="email" required>
+        <label for="password">Password <span class="label-hint">At least 8 characters</span></label>
+        <input id="password" th:field="*{password}" type="password" minlength="8" autocomplete="new-password" required>
+        <label for="role">I am a</label>
+        <select id="role" th:field="*{role}" required>
+            <option value="">Choose your role</option>
+            <option value="STUDENT">Student</option>
+            <option value="WARDEN">Warden</option>
+            <option value="HOSTEL_AUNTY">Hostel aunty</option>
+        </select>
+        <div id="student-details" class="stack-form">
+            <label for="hostel">Hostel</label>
+            <input id="hostel" th:field="*{hostel}" maxlength="100" placeholder="e.g. A Block">
+            <label for="roomNumber">Room number</label>
+            <input id="roomNumber" th:field="*{roomNumber}" maxlength="20" placeholder="e.g. 204">
+        </div>
+        <button class="button primary full-width" type="submit">Create account <span aria-hidden="true">→</span></button>
+    </form>
+    <p class="auth-footer">Already registered? <a th:href="@{/login}">Sign in</a></p>
+</main>
+<script>
+    const roleSelect = document.getElementById("role");
+    const studentDetails = document.getElementById("student-details");
+    const hostelField = document.getElementById("hostel");
+    const roomField = document.getElementById("roomNumber");
+    function updateStudentFields() {
+        const isStudent = roleSelect.value === "STUDENT";
+        studentDetails.hidden = !isStudent;
+        hostelField.required = isStudent;
+        roomField.required = isStudent;
+    }
+    roleSelect.addEventListener("change", updateStudentFields);
+    updateStudentFields();
+</script>
+</body>
+</html>

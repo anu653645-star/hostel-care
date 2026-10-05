@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard · HostelCare</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script th:src="@{/js/dashboard.js}" defer></script>
+</head>
+<body>
+<header class="topbar">
+    <a class="brand" th:href="@{/}"><span class="brand-mark">H</span> HostelCare</a>
+    <nav class="main-nav" aria-label="Main navigation">
+        <a class="nav-link is-current" href="#overview">Overview</a>
+        <a class="nav-link" th:if="${user.role == T(edu.citchennai.hostel.account.Role).STUDENT}" href="#raise-request">Raise a request</a>
+        <a class="nav-link" href="#requests">Track requests</a>
+    </nav>
+    <div class="topbar-right">
+        <div class="user-chip">
+            <span class="avatar" th:text="${#strings.substring(user.fullName, 0, 1)}">A</span>
+            <span><strong th:text="${user.fullName}">Name</strong><small th:text="${#strings.replace(user.role.name(), '_', ' ')}">Role</small></span>
+        </div>
+        <form th:action="@{/logout}" method="post"><button class="button quiet" type="submit">Sign out</button></form>
+    </div>
+</header>
+<main class="page-shell">
+    <section class="welcome-row hero-panel" id="overview">
+        <div class="hero-copy">
+            <p class="eyebrow" th:text="${user.role == T(edu.citchennai.hostel.account.Role).STUDENT ? 'YOUR HOSTEL, WELL LOOKED AFTER' : 'HOSTEL MAINTENANCE DESK'}">HOSTELCARE</p>
+            <h1 th:text="${'Hello, ' + user.fullName.split(' ')[0] + '.'}">Hello there.</h1>
+            <p class="hero-subtitle" th:if="${user.role == T(edu.citchennai.hostel.account.Role).STUDENT}">A better day starts with a space that works. Tell us what needs fixing and we’ll take it from here.</p>
+            <p class="hero-subtitle" th:if="${user.role != T(edu.citchennai.hostel.account.Role).STUDENT}">Small fixes make a big difference. Here’s what your hostel community needs today.</p>
+            <div class="hero-meta">
+                <div class="location-pill" th:if="${user.role == T(edu.citchennai.hostel.account.Role).STUDENT}">
+                    <span class="location-icon" aria-hidden="true">⌂</span>
+                    <span th:text="${user.hostel + ' · Room ' + user.roomNumber}">Hostel · Room</span>
+                </div>
+                <span class="live-indicator"><span></span> Your care desk is open</span>
+            </div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+            <span class="hero-orbit orbit-one"></span>
+            <span class="hero-orbit orbit-two"></span>
+            <div class="hero-art-card">
+                <span class="hero-art-icon">✳</span>
+                <span class="hero-art-label">A little care<br>goes a long way.</span>
+                <span class="hero-art-spark">✦</span>
+            </div>
+            <span class="hero-art-caption">MADE FOR BETTER LIVING</span>
+        </div>
+    </section>
+
+    <div class="notice success" th:if="${param.submitted}">Your complaint is in. The warden will review it shortly.</div>
+    <div class="notice error" th:if="${param.workflowError}">That update could not be completed. Refresh the page and check the complaint status.</div>
+    <div class="notice error" th:if="${formError}" th:text="${formError}"></div>
+
+    <section class="quick-stats" aria-label="Complaint overview">
+        <button class="stat-card stat-all" type="button" data-filter-link="all">
+            <span class="stat-icon">▦</span><span class="stat-copy"><strong id="stat-total" th:text="${complaints.size()}">0</strong><span>Total requests</span></span><span class="stat-arrow">↗</span>
+        </button>
+        <button class="stat-card stat-active" type="button" data-filter-link="active">
+            <span class="stat-icon">◷</span><span class="stat-copy"><strong id="stat-active">0</strong><span>In progress</span></span><span class="stat-arrow">↗</span>
+        </button>
+        <button class="stat-card stat-solved" type="button" data-filter-link="solved">
+            <span class="stat-icon">✓</span><span class="stat-copy"><strong id="stat-solved">0</strong><span>Resolved</span></span><span class="stat-arrow">↗</span>
+        </button>
+    </section>
+
+    <section class="browse-section" th:if="${user.role == T(edu.citchennai.hostel.account.Role).STUDENT}">
+        <div class="browse-heading">
+            <div><p class="eyebrow">PICK A CATEGORY</p><h2>What needs fixing?</h2></div>
+            <a class="browse-all" href="#raise-request">View all <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="category-rail" aria-label="Choose a complaint category">
+            <button class="category-tile" type="button" th:each="category : ${categories}" th:attr="data-category-choice=${category.name()}">
+                <span class="category-art" aria-hidden="true"></span>
+                <span class="category-tile-name" th:text="${category.label}">Category</span>
+                <span class="category-tile-action">Report an issue <span aria-hidden="true">↗</span></span>
+            </button>
+        </div>
+    </section>
+
+    <section class="new-complaint panel" id="raise-request" th:if="${user.role == T(edu.citchennai.hostel.account.Role).STUDENT}">
+        <div class="section-heading">
+            <div><p class="eyebrow">LET’S GET IT SORTED</p><h2>Raise a complaint</h2><p class="section-subtitle">A few details help us get the right person on it.</p></div>
+            <span class="form-mark" aria-hidden="true">01 <span>— 03</span></span>
+        </div>
+        <form th:action="@{/complaints}" method="post" enctype="multipart/form-data" class="complaint-form">
+            <div class="field">
+                <label for="category">What needs attention?</label>
+                <select id="category" name="category" required>
+                    <option value="">Choose a category</option>
+                    <option th:each="category : ${categories}" th:value="${category.name()}" th:text="${category.label}"></option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="description">Tell us a little more</label>
+                <textarea id="description" name="description" rows="3" maxlength="2000" placeholder="What happened, and where should we look?" required></textarea>
+            </div>
+            <div class="field">
+                <label for="photo">Show us what’s happening</label>
+                <label class="upload-zone" for="photo" id="upload-zone">
+                    <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required>
+                    <img class="upload-preview" id="upload-preview" alt="Preview of selected photo" hidden>
+                    <span class="upload-icon" aria-hidden="true">↥</span>
+                    <span class="upload-copy"><strong>Drop a photo here</strong><span>or click to browse · JPG, PNG, WEBP</span></span>
+                    <span class="upload-limit">MAX 5 MB</span>
+                </label>
+                <span class="field-hint" id="photo-hint" aria-live="polite">A quick photo helps us understand the problem.</span>
+            </div>
+            <button class="button primary submit-button" type="submit">Send it our way <span aria-hidden="true">↗</span></button>
+        </form>
+    </section>
+
+    <section class="complaints-section" id="requests">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow" th:text="${user.role == T(edu.citchennai.hostel.account.Role).STUDENT ? 'A CLEAR VIEW OF WHAT’S NEXT' : 'THE PEOPLE WHO NEED YOU'}">YOUR REQUESTS</p>
+                <h2 th:text="${user.role == T(edu.citchennai.hostel.account.Role).STUDENT ? 'Your requests' : 'The care queue'}">Your requests</h2>
+                <p class="section-subtitle" th:if="${user.role == T(edu.citchennai.hostel.account.Role).STUDENT}">Every update, from first report to fixed.</p>
+                <p class="section-subtitle" th:if="${user.role != T(edu.citchennai.hostel.account.Role).STUDENT}">One thoughtful fix at a time.</p>
+            </div>
+            <span class="count-pill"><span class="count-number" id="visible-count" th:text="${complaints.size()}">0</span><span id="count-label" th:text="${complaints.size() == 1 ? 'request' : 'requests'}">requests</span></span>
+        </div>
+        <div class="queue-tools" th:unless="${complaints.isEmpty()}">
+            <label class="search-box">
+                <span aria-hidden="true">⌕</span>
+                <input id="complaint-search" type="search" placeholder="Search requests…" aria-label="Search complaints">
+                <kbd>/</kbd>
+            </label>
+            <div class="filter-tabs" role="group" aria-label="Filter complaints">
+                <button class="filter-tab is-active" type="button" data-filter="all" aria-pressed="true">All <span th:text="${complaints.size()}">0</span></button>
+                <button class="filter-tab" type="button" data-filter="active" aria-pressed="false">In progress</button>
+                <button class="filter-tab" type="button" data-filter="solved" aria-pressed="false">Resolved</button>
+            </div>
+        </div>
+        <div class="empty-state panel" th:if="${complaints.isEmpty()}">
+            <span class="empty-illustration" aria-hidden="true"><span>✳</span></span>
+            <h3 th:if="${user.role == T(edu.citchennai.hostel.account.Role).STUDENT}">All quiet for now</h3>
+            <h3 th:if="${user.role != T(edu.citchennai.hostel.account.Role).STUDENT}">No complaints to review</h3>
+            <p th:if="${user.role == T(edu.citchennai.hostel.account.Role).STUDENT}">When you send a complaint, its updates will appear here.</p>
+            <p th:if="${user.role != T(edu.citchennai.hostel.account.Role).STUDENT}">New student requests will show up here.</p>
+        </div>
+        <div class="empty-state panel filter-empty" id="filter-empty" hidden>
+            <span class="empty-illustration" aria-hidden="true"><span>⌕</span></span>
+            <h3>No matching requests</h3>
+            <p>Try another search or choose a different filter.</p>
+        </div>
+        <div class="complaint-list" id="complaint-list" th:unless="${complaints.isEmpty()}">
+            <article class="complaint-card panel" th:each="complaint : ${complaints}" th:data-status="${complaint.status.name()}" th:data-category="${complaint.category.name()}">
+                <div class="complaint-main">
+                    <button class="photo-button" type="button" th:attr="aria-label=${'View photo for ' + complaint.category.label + ' complaint'}">
+                        <img class="complaint-photo" th:src="@{/complaints/{id}/photo(id=${complaint.id})}" alt="Photo attached to complaint">
+                        <span class="photo-zoom" aria-hidden="true">↗</span>
+                    </button>
+                    <div class="complaint-copy">
+                        <div class="card-title-row">
+                            <div><span class="category-tag" th:text="${complaint.category.label}">Light</span><span class="complaint-id" th:text="${'#HC-' + complaint.id}">#HC-1</span></div>
+                            <span class="status-pill" th:classappend="${' status-' + #strings.toLowerCase(complaint.status.name().replace('_', '-'))}" th:text="${complaint.status.label}">Waiting for warden</span>
+                        </div>
+                        <p class="description" th:text="${complaint.description}">Description</p>
+                        <div class="meta-row">
+                            <span th:if="${user.role != T(edu.citchennai.hostel.account.Role).STUDENT}" th:text="${complaint.student.fullName + ' · ' + complaint.student.hostel + ' · Room ' + complaint.student.roomNumber}">Student details</span>
+                            <span th:if="${user.role == T(edu.citchennai.hostel.account.Role).STUDENT}" th:text="${complaint.createdAt}">Date submitted</span>
+                            <span class="visit-date" th:if="${complaint.visitDate != null}" th:text="${'Visit planned · ' + #temporals.format(complaint.visitDate, 'd MMM yyyy')}">Visit date</span>
+                        </div>
+                        <div class="progress-track" th:if="${user.role == T(edu.citchennai.hostel.account.Role).STUDENT}" aria-label="Complaint progress">
+                            <div class="progress-step">
+                                <span class="progress-dot done">✓</span>
+                                <span>You reported it</span>
+                            </div>
+                            <div class="progress-line" th:classappend="${complaint.isWardenAccepted() ? ' complete' : ''}"></div>
+                            <div class="progress-step">
+                                <span class="progress-dot" th:classappend="${complaint.isWardenAccepted() ? ' done' : ''}" th:text="${complaint.isWardenAccepted() ? '✓' : '2'}">2</span>
+                                <span>Warden</span>
+                            </div>
+                            <div class="progress-line" th:classappend="${complaint.visitDate != null ? ' complete' : ''}"></div>
+                            <div class="progress-step">
+                                <span class="progress-dot" th:classappend="${complaint.visitDate != null ? ' done' : ''}" th:text="${complaint.visitDate != null ? '✓' : '3'}">3</span>
+                                <span>Hostel aunty</span>
+                            </div>
+                            <div class="progress-line" th:classappend="${complaint.status == T(edu.citchennai.hostel.complaint.ComplaintStatus).SOLVED ? ' complete' : ''}"></div>
+                            <div class="progress-step">
+                                <span class="progress-dot" th:classappend="${complaint.status == T(edu.citchennai.hostel.complaint.ComplaintStatus).SOLVED ? ' done' : ''}" th:text="${complaint.status == T(edu.citchennai.hostel.complaint.ComplaintStatus).SOLVED ? '✓' : '4'}">4</span>
+                                <span>Resolved</span>
+                            </div>
+                        </div>
+                        <form th:if="${user.role == T(edu.citchennai.hostel.account.Role).STUDENT and complaint.status == T(edu.citchennai.hostel.complaint.ComplaintStatus).VISIT_SCHEDULED}" th:action="@{/complaints/{id}/solved(id=${complaint.id})}" method="post" class="confirm-form">
+                            <button class="button solved-button" type="submit">✓ &nbsp; Mark as solved</button>
+                            <span class="field-hint">Only confirm once the repair is complete.</span>
+                        </form>
+                        <p class="solved-confirmation" th:if="${complaint.status == T(edu.citchennai.hostel.complaint.ComplaintStatus).SOLVED}">✓ &nbsp; You confirmed this problem is solved. The warden has been updated.</p>
+                        <form th:if="${user.role == T(edu.citchennai.hostel.account.Role).WARDEN and complaint.status == T(edu.citchennai.hostel.complaint.ComplaintStatus).WAITING_FOR_WARDEN}" th:action="@{/complaints/{id}/accept(id=${complaint.id})}" method="post">
+                            <button class="button primary" type="submit">Accept complaint <span aria-hidden="true">→</span></button>
+                        </form>
+                        <form th:if="${user.role == T(edu.citchennai.hostel.account.Role).HOSTEL_AUNTY and complaint.status == T(edu.citchennai.hostel.complaint.ComplaintStatus).WAITING_FOR_HOSTEL_AUNTY}" th:action="@{/complaints/{id}/schedule(id=${complaint.id})}" method="post" class="schedule-form">
+                            <label th:for="${'visit-date-' + complaint.id}">Plan a room visit</label>
+                            <input th:id="${'visit-date-' + complaint.id}" type="date" name="visitDate" th:min="${today}" required>
+                            <button class="button primary" type="submit">Set visit date</button>
+                        </form>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+    <footer class="page-footer">HostelCare <span>·</span> A little care goes a long way.</footer>
+</main>
+<dialog class="photo-dialog" id="photo-dialog" aria-label="Complaint photo">
+    <button class="dialog-close" type="button" aria-label="Close photo">×</button>
+    <img id="dialog-photo" alt="Larger view of the complaint photo">
+</dialog>
+</body>
+</html>
